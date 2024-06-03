@@ -101,10 +101,7 @@ export default {
         });
     },
     remove(id) {
-      this.$store.dispatch("upd", {
-        ...this.user,
-        friends: this.user.friends.filter((f) => f !== id),
-      });
+      this.$store.dispatch("removeFriend", [this.user.id, id]);
     },
     showCyclicConnection() {},
   },

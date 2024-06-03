@@ -37,17 +37,33 @@ const store = new Vuex.Store({
       const user = {
         ...state.users[userIndex],
         index: userIndex,
-        friends: [...new Set([...(state.users[userIndex]?.friends ?? []), ids[1]])],
+        friends: [
+          ...new Set([...(state.users[userIndex]?.friends ?? []), ids[1]]),
+        ],
       };
       const friend = {
         ...state.users[friendIndex],
         index: friendIndex,
-        friends: [...new Set([...(state.users[friendIndex]?.friends ?? []), ids[0]])],
+        friends: [
+          ...new Set([...(state.users[friendIndex]?.friends ?? []), ids[0]]),
+        ],
       };
       return new Promise((resolve) => {
         resolve();
         commit("upd", user);
         commit("upd", friend);
+      });
+    },
+    removeFriend({ commit, state }, ids) {
+      const userIndex = state.users.findIndex((f) => f.id === ids[0]);
+      const user = {
+        ...state.users[userIndex],
+        index: userIndex,
+        friends: state.users[userIndex].friends.filter((f) => f !== ids[1]),
+      };
+      return new Promise((resolve) => {
+        resolve();
+        commit("upd", user);
       });
     },
   },
