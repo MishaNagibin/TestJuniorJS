@@ -103,7 +103,46 @@ export default {
     remove(id) {
       this.$store.dispatch("removeFriend", [this.user.id, id]);
     },
-    showCyclicConnection() {},
+    showCyclicConnection() {
+      // не получилось чето
+      // хотел сделать так, чтобы он проходился по friends и делал эту связь
+      // типа у Васи друг Петя, у Пети друг Вася и Дима, но Васю откинем,
+      // а у Димы друг Вася (первоначальный)
+      const users = [
+        {
+          id: 1,
+          name: "Вася",
+          friends: [2],
+        },
+        {
+          id: 2,
+          name: "Петя",
+          friends: [1, 3],
+        },
+        {
+          id: 3,
+          name: "Дима",
+          friends: [1, 2],
+        },
+      ];
+      function getCycle(id, startID, res) {
+        const user = users.find((u) => u.id === id);
+        const name = user.name;
+        const result = `${name} добавил ${res ?? ""}`;
+        const filtered = user.friends.filter((v) => v !== id);
+        if (filtered.length > 0) {
+          for (const f of filtered) {
+            if (![id, startID].includes(f)) {
+              getCycle(f, startID, result + users.find((u) => u.id === f).name);
+            } else {
+              return result + users.find((u) => u.id === f).name;
+            }
+          }
+        } else {
+          return result;
+        }
+      }
+    },
   },
 };
 </script>
