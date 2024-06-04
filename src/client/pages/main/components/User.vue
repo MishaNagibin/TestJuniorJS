@@ -39,7 +39,22 @@
           </tbody>
         </template>
       </v-simple-table>
-      <v-btn @click="showCyclicConnection"> Показать циклическую связь </v-btn>
+      <v-btn
+        @click="showHideCyclicConnection"
+        :color="!isShowCyclicConnection ? 'green' : 'blue'"
+      >
+        {{ !isShowCyclicConnection ? "Показать" : "Скрыть" }}
+        циклическую связь
+      </v-btn>
+      <v-alert
+        v-if="isShowCyclicConnection"
+        border="top"
+        colored-border
+        type="info"
+        elevation="2"
+      >
+        {{ resultCyclicConnection || "Связь не найдена" }}
+      </v-alert>
     </template>
   </v-app>
   <div v-else>
@@ -57,6 +72,8 @@ export default {
   data() {
     return {
       selectFriendID: null,
+      resultCyclicConnection: null,
+      isShowCyclicConnection: false,
     };
   },
   computed: {
@@ -103,45 +120,41 @@ export default {
     remove(id) {
       this.$store.dispatch("removeFriend", [this.user.id, id]);
     },
-    showCyclicConnection() {
-      // не получилось чето
-      // хотел сделать так, чтобы он проходился по friends и делал эту связь
-      // типа у Васи друг Петя, у Пети друг Вася и Дима, но Васю откинем,
-      // а у Димы друг Вася (первоначальный)
-      const users = [
-        {
-          id: 1,
-          name: "Вася",
-          friends: [2],
-        },
-        {
-          id: 2,
-          name: "Петя",
-          friends: [1, 3],
-        },
-        {
-          id: 3,
-          name: "Дима",
-          friends: [1, 2],
-        },
-      ];
-      function getCycle(id, startID, res) {
-        const user = users.find((u) => u.id === id);
-        const name = user.name;
-        const result = `${name} добавил ${res ?? ""}`;
-        const filtered = user.friends.filter((v) => v !== id);
-        if (filtered.length > 0) {
-          for (const f of filtered) {
-            if (![id, startID].includes(f)) {
-              getCycle(f, startID, result + users.find((u) => u.id === f).name);
-            } else {
-              return result + users.find((u) => u.id === f).name;
+    showHideCyclicConnection() {
+      this.isShowCyclicConnection = !this.isShowCyclicConnection;
+
+      this.resultCyclicConnection = this.isShowCyclicConnection
+        ? (this.resultCyclicConnection = this.getCycle(
+            this.userId,
+            this.userId
+          ))
+        : null;
+    },
+    getCycle(id, start, visited = new Set(), res = "") {
+      const users = this.$store.state.users;
+      const user = users.find((u) => u.id === id);
+      const name = user.name;
+      const result = `${res}${name} добавил `;
+      visited.add(id);
+      const friends = (user?.friends ?? []).filter((v) => v !== id).reverse();
+      if (friends.length > 0) {
+        for (const f of friends) {
+          if (f === start) {
+            return `${result}${users.find((u) => u.id === f).name}`;
+          } else if (!visited.has(f)) {
+            const cycle = this.getCycle(
+              f,
+              start,
+              visited,
+              `${result}${users.find((u) => u.id === f).name}, `
+            );
+            if (cycle) {
+              return cycle;
             }
           }
-        } else {
-          return result;
         }
       }
+      return null;
     },
   },
 };
@@ -161,6 +174,10 @@ export default {
       width: fit-content;
       gap: 20px;
       flex: unset;
+    }
+
+    & > button {
+      margin: 20px 0;
     }
   }
 }

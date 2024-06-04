@@ -69,6 +69,39 @@ const store = new Vuex.Store({
   },
   mutations: {
     init(state) {
+      const localStorageUsers = localStorage.getItem("users");
+      // небольшой пресет данных, чтобы вручную не делать их
+      if (["[]", null].includes(localStorageUsers)) {
+        localStorage.setItem(
+          "users",
+          JSON.stringify([
+            {
+              id: 1,
+              name: "Вася",
+              sname: "Васильев",
+              pname: "Иванович",
+              email: "vasya@mail.ru",
+              friends: [2],
+            },
+            {
+              id: 2,
+              name: "Петя",
+              sname: "Петров",
+              pname: "Викторович",
+              email: "petya@mail.ru",
+              friends: [1, 3],
+            },
+            {
+              id: 3,
+              name: "Дима",
+              sname: "Дмитров",
+              pname: "Олегович",
+              email: "dima@mail.ru",
+              friends: [1, 2],
+            },
+          ])
+        );
+      }
       state.users = JSON.parse(localStorage.getItem("users") ?? "[]");
     },
     add(state, data) {
